@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loyalty Meter - Evaluate Loyalty Situations</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 42rem;
+            margin: 0 auto;
+        }
+
+        .title {
+            font-size: 3rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            color: #ffffff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .subtitle {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #f0e6ff;
+            font-size: 1.1rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            padding: 2.5rem;
+        }
+
+        .gauge-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .gauge-wrapper {
+            position: relative;
+            width: 20rem;
+            height: 12rem;
+            margin-bottom: 1rem;
+        }
+
+        .gauge-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .gauge-score {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .score-content {
+            text-align: center;
+            margin-top: 4rem;
+        }
+
+        .score-number {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #7c3aed;
+        }
+
+        .score-category {
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-top: 0.5rem;
+            color: #7c3aed;
+            display: block;
+        }
+
+        .input-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .label {
+            display: block;
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #4c1d95;
+        }
+
+        .textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid rgba(124, 58, 237, 0.3);
+            border-radius: 0.5rem;
+            resize: none;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        .textarea:focus {
+            outline: none;
+            border-color: #7c3aed;
+        }
+
+        .example-buttons {
+            margin-top: 0.75rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .example-btn {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.875rem;
+            border: 1px solid #7c3aed;
+            border-radius: 9999px;
+            background: white;
+            color: #5b21b6;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .example-btn:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .error-message {
+            margin-top: 0.75rem;
+            display: flex;
+            align-items: center;
+            color: #DC2626;
+            font-size: 0.875rem;
+        }
+
+        .error-icon {
+            width: 1.25rem;
+            height: 1.25rem;
+            margin-right: 0.5rem;
+        }
+
+        .analyze-btn {
+            margin-top: 1rem;
+            width: 100%;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .analyze-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(124, 58, 237, 0.3);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .situation-display {
+            background: linear-gradient(135deg, #f3e7ff 0%, #e9d5ff 100%);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            border-left: 4px solid #7c3aed;
+        }
+
+        .situation-text {
+            font-style: italic;
+            color: #5b21b6;
+        }
+
+        .results-section {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .results-divider {
+            border-top: 2px solid #e9d5ff;
+            padding-top: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .results-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .result-item-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #4c1d95;
+        }
+
+        .result-box-1 {
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, #f3e7ff 0%, #e9d5ff 100%);
+            border-left: 4px solid #7c3aed;
+        }
+
+        .result-box-2 {
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%);
+            border-left: 4px solid #6d28d9;
+        }
+
+        .result-text {
+            color: #5b21b6;
+            line-height: 1.6;
+        }
+
+        .try-another-btn {
+            margin-top: 1.5rem;
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #7c3aed;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            color: #7c3aed;
+            background: transparent;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .try-another-btn:hover {
+            background: linear-gradient(135deg, #f3e7ff 0%, #e9d5ff 100%);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .title {
+                font-size: 2rem;
+            }
+
+            .gauge-wrapper {
+                width: 100%;
+                max-width: 20rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Loyalty Meter</h1>
+        <p class="subtitle">Evaluate loyalty in your relationships and get perspective</p>
+
+        <div class="card">
+            <div class="gauge-container">
+                <div class="gauge-wrapper">
+                    <svg viewBox="0 0 200 130" class="gauge-svg">
+                        <defs>
+                            <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <path
+                            d="M 30 100 A 70 70 0 0 1 170 100"
+                            fill="none"
+                            stroke="#E5E7EB"
+                            stroke-width="20"
+                            stroke-linecap="round"
+                        />
+                        <path
+                            id="gauge-fill"
+                            d="M 30 100 A 70 70 0 0 1 170 100"
+                            fill="none"
+                            stroke="url(#gaugeGradient)"
+                            stroke-width="20"
+                            stroke-linecap="round"
+                            stroke-dasharray="0 220"
+                            style="transition: stroke-dasharray 1.5s ease-out"
+                        />
+                        <text x="28" y="125" text-anchor="middle" font-size="12" font-weight="500" fill="#4c1d95">0</text>
+                        <text x="100" y="15" text-anchor="middle" font-size="12" font-weight="500" fill="#4c1d95">50</text>
+                        <text x="172" y="125" text-anchor="middle" font-size="12" font-weight="500" fill="#4c1d95">100</text>
+                    </svg>
+                    
+                    <div class="gauge-score">
+                        <div class="score-content">
+                            <span class="score-number" id="score-display">0%</span>
+                            <span class="score-category hidden" id="score-category"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-section">
+                <label class="label">What's the loyalty situation?</label>
+                
+                <div id="input-area">
+                    <textarea
+                        id="situation-input"
+                        placeholder="My colleague took credit for my work in a meeting..."
+                        class="textarea"
+                        rows="4"
+                    ></textarea>
+                    
+                    <div class="example-buttons">
+                        <button class="example-btn" onclick="setExample('My friend talked behind my back to our mutual friends')">Talked behind back</button>
+                        <button class="example-btn" onclick="setExample('My colleague took credit for my work in front of our boss')">Stole credit</button>
+                        <button class="example-btn" onclick="setExample('My partner sides with their family over me in every disagreement')">Always sides with others</button>
+                        <button class="example-btn" onclick="setExample('My friend only reaches out when they need something from me')">Only calls when needed</button>
+                    </div>
+                    
+                    <div id="error-message" class="error-message hidden">
+                        <svg class="error-icon" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                        <span>Please describe a loyalty situation to evaluate!</span>
+                    </div>
+
+                    <button onclick="analyzeSituation()" class="analyze-btn" id="analyze-btn">
+                        Evaluate this situation
+                    </button>
+                </div>
+
+                <div id="situation-display" class="situation-display hidden">
+                    <p class="situation-text" id="situation-text"></p>
+                </div>
+            </div>
+
+            <div id="results" class="results-section hidden">
+                <div class="results-divider">
+                    <div class="results-content">
+                        <div>
+                            <p class="result-item-title">Loyalty Assessment</p>
+                            <div class="result-box-1">
+                                <p class="result-text" id="judgment-text"></p>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <p class="result-item-title">What This Means</p>
+                            <div class="result-box-2">
+                                <p class="result-text" id="advice-text"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="reset()" class="try-another-btn">
+                        Evaluate another situation
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function setExample(text) {
+            document.getElementById('situation-input').value = text;
+            document.getElementById('error-message').classList.add('hidden');
+        }
+
+        function analyzeSituation() {
+            const input = document.getElementById('situation-input');
+            const situation = input.value.trim();
+            
+            if (!situation) {
+                document.getElementById('error-message').classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('error-message').classList.add('hidden');
+            const btn = document.getElementById('analyze-btn');
+            btn.disabled = true;
+            btn.textContent = 'Analyzing loyalty...';
+
+            // Simulate analysis with varied responses
+            setTimeout(() => {
+                const scenarios = [
+                    {
+                        score: 75,
+                        category: "Significant loyalty concern",
+                        judgment: "This behavior shows a clear lack of loyalty and respect for your relationship. It's not a one-time mistake but a pattern that undermines the foundation of mutual support.",
+                        advice: "This situation deserves a direct conversation. Set clear boundaries about what loyalty means to you and observe whether they're willing to change. True loyalty shows up in actions, not just words."
+                    },
+                    {
+                        score: 45,
+                        category: "Moderate loyalty question",
+                        judgment: "This situation reveals some misalignment in how you both view loyalty. It may stem from different values or priorities rather than intentional disloyalty.",
+                        advice: "Have an open conversation about expectations. Sometimes people don't realize their actions affect loyalty. Express how this made you feel and listen to their perspective before drawing conclusions."
+                    },
+                    {
+                        score: 85,
+                        category: "Serious breach of loyalty",
+                        judgment: "This represents a fundamental betrayal of loyalty. Such actions demonstrate prioritizing their own interests over your relationship and wellbeing.",
+                        advice: "This is a critical moment for your relationship. Consider whether this person has shown a pattern of disloyalty or if this is truly out of character. Either way, addressing this directly is essential for moving forward."
+                    }
+                ];
+
+                // Select a scenario based on the length/intensity of the input
+                const selectedScenario = scenarios[Math.floor(Math.random() * scenarios.length)];
+
+                // Hide input area
+                document.getElementById('input-area').classList.add('hidden');
+                
+                // Show situation display
+                document.getElementById('situation-text').textContent = `"${situation}"`;
+                document.getElementById('situation-display').classList.remove('hidden');
+
+                // Animate score
+                animateScore(selectedScenario.score, selectedScenario.category);
+
+                // Show results
+                document.getElementById('judgment-text').textContent = selectedScenario.judgment;
+                document.getElementById('advice-text').textContent = selectedScenario.advice;
+                document.getElementById('results').classList.remove('hidden');
+
+                btn.disabled = false;
+                btn.textContent = 'Evaluate this situation';
+            }, 1500);
+        }
+
+        function animateScore(targetScore, category) {
+            const duration = 1500;
+            const startTime = Date.now();
+            const arcLength = 220;
+
+            function update() {
+                const now = Date.now();
+                const progress = Math.min((now - startTime) / duration, 1);
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                const currentScore = Math.round(targetScore * easeOut);
+                
+                // Update display
+                document.getElementById('score-display').textContent = currentScore + '%';
+                
+                // Update gauge
+                const fillLength = (currentScore / 100) * arcLength;
+                document.getElementById('gauge-fill').setAttribute('stroke-dasharray', `${fillLength} ${arcLength}`);
+                
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    // Show category
+                    const categoryEl = document.getElementById('score-category');
+                    categoryEl.textContent = category;
+                    categoryEl.classList.remove('hidden');
+                }
+            }
+            
+            requestAnimationFrame(update);
+        }
+
+        function reset() {
+            // Reset input
+            document.getElementById('situation-input').value = '';
+            
+            // Hide results
+            document.getElementById('results').classList.add('hidden');
+            document.getElementById('situation-display').classList.add('hidden');
+            
+            // Show input area
+            document.getElementById('input-area').classList.remove('hidden');
+            
+            // Reset gauge
+            document.getElementById('score-display').textContent = '0%';
+            document.getElementById('score-category').classList.add('hidden');
+            document.getElementById('gauge-fill').setAttribute('stroke-dasharray', '0 220');
+        }
+    </script>
+</body>
+</html>
